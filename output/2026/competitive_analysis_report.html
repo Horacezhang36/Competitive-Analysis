@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 竞品分析报告 | 2026年5月</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --openai-primary: #412a75;
+            --openai-secondary: #6b3fa0;
+            --google-primary: #4285f4;
+            --google-secondary: #34a853;
+            --claude-primary: #cd853f;
+            --claude-secondary: #8b4513;
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-hover: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --success: #3fb950;
+            --warning: #d29922;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1f35 0%, #0d1117 100%);
+            padding: 60px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #58a6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        .header .meta {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            min-width: 150px;
+        }
+        .stat-card .number {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            background: var(--bg-dark);
+            padding: 20px 0;
+            z-index: 100;
+        }
+        .nav-tab {
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+        .nav-tab:hover {
+            background: var(--bg-hover);
+        }
+        .nav-tab.active {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+        }
+        .nav-tab.openai { --tab-color: var(--openai-primary); }
+        .nav-tab.google { --tab-color: var(--google-primary); }
+        .nav-tab.claude { --tab-color: var(--claude-primary); }
+        .nav-tab.active {
+            background: var(--tab-color);
+            border-color: var(--tab-color);
+        }
+
+        /* Company Sections */
+        .company-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .company-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .company-header {
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        .company-header.openai {
+            background: linear-gradient(135deg, var(--openai-primary), var(--openai-secondary));
+        }
+        .company-header.google {
+            background: linear-gradient(135deg, var(--google-primary), var(--google-secondary));
+        }
+        .company-header.claude {
+            background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+        }
+        .company-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        .company-header .tagline {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        /* Product Cards */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+        .product-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-3px);
+        }
+        .product-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 12px;
+            color: var(--accent-blue);
+        }
+        .product-card .date {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+        .product-card .description {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+        .product-card .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .feature-tag {
+            background: var(--bg-hover);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: var(--accent-blue);
+        }
+        .product-card .source {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        .product-card .source a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        .product-card .source a:hover {
+            text-decoration: underline;
+        }
+
+        /* Comparison Section */
+        .comparison-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        .comparison-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: var(--accent-blue);
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .comparison-table th {
+            background: var(--bg-hover);
+            font-weight: 600;
+        }
+        .comparison-table th.openai { color: var(--openai-secondary); }
+        .comparison-table th.google { color: var(--google-secondary); }
+        .comparison-table th.claude { color: var(--claude-secondary); }
+        .comparison-table tr:hover {
+            background: var(--bg-hover);
+        }
+        .comparison-table td:first-child {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Market Analysis */
+        .market-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        .market-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: var(--accent-blue);
+        }
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .market-card {
+            background: var(--bg-hover);
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .market-card h4 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .market-card p {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--border-color);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -34px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+        }
+        .timeline-item .date {
+            color: var(--accent-blue);
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .timeline-item .title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .timeline-item .desc {
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        .footer .disclaimer {
+            font-size: 0.9em;
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+
+        /* Sources Section */
+        .sources-section {
+            margin-top: 40px;
+        }
+        .sources-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        .source-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 15px;
+        }
+        .source-item {
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .source-item a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .source-item a:hover {
+            text-decoration: underline;
+        }
+        .source-item .snippet {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .stats { gap: 15px; }
+            .stat-card { padding: 15px 20px; }
+            .products-grid { grid-template-columns: 1fr; }
+            .comparison-table { font-size: 0.85em; }
+            .comparison-table th, .comparison-table td { padding: 10px; }
+        }
+
+        /* Print */
+        @media print {
+            body { background: #fff; color: #000; }
+            .nav-tabs { display: none; }
+            .company-section { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🤖 AI 竞品分析报告</h1>
+        <div class="meta">OpenAI · Google AI · Claude (Anthropic) | 2026年5月深度分析</div>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">3</div>
+                <div class="label">AI 公司分析</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">35</div>
+                <div class="label">产品/功能</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">47</div>
+                <div class="label">参考来源</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">2026-05-16</div>
+                <div class="label">报告日期</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('openai')">🔵 OpenAI</div>
+            <div class="nav-tab" onclick="showTab('google')">🟢 Google AI</div>
+            <div class="nav-tab" onclick="showTab('claude')">🟠 Claude</div>
+            <div class="nav-tab" onclick="showTab('comparison')">📊 功能对比</div>
+            <div class="nav-tab" onclick="showTab('market')">📈 市场分析</div>
+        </nav>
+
+        
+            <div class="company-section" id="openai">
+                <div class="company-header openai">
+                    <h2>🔵 OpenAI</h2>
+                    <div class="tagline">推动 AI 技术的边界</div>
+                </div>
+                <div class="products-grid">
+                    
+                    <div class="product-card">
+                        <h3>Introducing **GPT-5**.5 | OpenAI</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Introducing GPT-5.5 | OpenAI...</div>
+                        <div class="features"><span class="feature-tag">GPT-5</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fintroducing%2Dgpt%2D5%2D5%2F&amp;rut=c8d1452c8b8ac2e3bf1b8f7c706296b51c5907357c6b4f64d17a051f004816fe" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Introducing **ChatGPT** Futures: Class of 2026 - OpenAI</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Introducing ChatGPT Futures: Class of 2026 - OpenAI...</div>
+                        <div class="features"><span class="feature-tag">ChatGPT</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fintroducing%2Dchatgpt%2Dfutures%2Dclass%2Dof%2D2026%2F&amp;rut=49fe9ddcc26659b7ea20ff1fd24eeafb698b2dfb14f81fbc3890a957cb713d8f" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Retiring GPT‑4o, GPT‑4.1, GPT‑4.1 mini, and OpenAI o4-mini in **ChatGPT**</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Retiring GPT‑4o, GPT‑4.1, GPT‑4.1 mini, and OpenAI o4-mini in ChatGPT...</div>
+                        <div class="features"><span class="feature-tag">ChatGPT</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fretiring%2Dgpt%2D4o%2Dand%2Dolder%2Dmodels%2F&amp;rut=3dc61a262f94d66278a6d2ba666245228be7f82af3be0966e645ce7125e0e66d" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Introducing **Operator** - OpenAI</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Introducing Operator - OpenAI...</div>
+                        <div class="features"><span class="feature-tag">Operator</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fintroducing%2Doperator%2F&amp;rut=ec444da5926e996e81ab7e003c3f21dd644bfba5cbd943b1012088ca47de5c40" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>OpenAI **Operator** Tutorial 2026: Build Autonomous AI Agents - Tent Of Tech</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 OpenAI Operator Tutorial 2026: Build Autonomous AI Agents - Tent Of Tech...</div>
+                        <div class="features"><span class="feature-tag">Operator</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Ftentoftech.com%2Fblog%2Fopenai%2Doperator%2Dtutorial%2D2026%2Dhow%2Dto%2Dbuild%2Dwith%2Dthe%2Dgpt%2D6%2Dautonomous%2Dagent%2F&amp;rut=f6943b1d95d71863a6db42d03f44c39928821a70cb1939e2927a9b739a3718a6" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Ftentoftech....</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>OpenAI **Operator** Guide 2026: AI That Does Your Web Tasks</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 OpenAI Operator Guide 2026: AI That Does Your Web Tasks...</div>
+                        <div class="features"><span class="feature-tag">Operator</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Faifirstfounders.com%2Fblog%2Fopenai%2Doperator%2Dguide%2D2026.html&amp;rut=5f51c424193842cdd2af6eeba66fa820d7a42aeeab183592d91cec3b024b3be7" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Faifirstfoun...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>OpenAI **Operator**: Specs, Pricing & Real-World Performance Guide (2026)</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 OpenAI Operator: Specs, Pricing & Real-World Performance Guide (2026)...</div>
+                        <div class="features"><span class="feature-tag">Operator</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fucstrategies.com%2Fnews%2Fopenai%2Doperator%2Dspecs%2Dpricing%2Dreal%2Dworld%2Dperformance%2Dguide%2D2026%2F&amp;rut=97d8bef22f21cd1bf7a2449b5d20b4b8795f7c882ca662c03167ef6b2c1da468" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fucstrategie...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>OpenAI **Operator** 2026: How the Computer-Using Agent Works</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 OpenAI Operator 2026: How the Computer-Using Agent Works...</div>
+                        <div class="features"><span class="feature-tag">Operator</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Ffutureagi.com%2Fblog%2Fopenai%2Doperator%2D2025&amp;rut=1bf9d7729e9490fcb26f1a5b3611f93903d873e1656e4bc565869d05cfda5640" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Ffutureagi.c...</a></div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+
+            <div class="company-section" id="google">
+                <div class="company-header google">
+                    <h2>🟢 Google AI</h2>
+                    <div class="tagline">让 AI 惠及每个人</div>
+                </div>
+                <div class="products-grid">
+                    
+                    <div class="product-card">
+                        <h3>**Gemini** 3 — Google DeepMind</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Gemini 3 — Google DeepMind...</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2Fmodels%2Fgemini%2F&amp;rut=14e3a81b8dc5da9424bf96043e80e0f85c83152a29ea44533d7a88437d14a0b5" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.go...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Gemma** 4 — Google DeepMind</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Gemma 4 — Google DeepMind...</div>
+                        <div class="features"><span class="feature-tag">Gemma</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2Fmodels%2Fgemma%2Fgemma%2D4%2F&amp;rut=92fd4b7cd7b5e26fee7ae7510fdc13036ddcdcd5461043a1248c237bfe1d30a0" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.go...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>7 **Gemini** Models Compared: Which to Use in 2026 (Pro, Flash, Ultra)</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 7 Gemini Models Compared: Which to Use in 2026 (Pro, Flash, Ultra)...</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fteamai.com%2Fblog%2Flarge%2Dlanguage%2Dmodels%2Dllms%2Fgemini%2Dmodels%2Dexplained%2Dthe%2Dcomplete%2D2026%2Dguide%2F&amp;rut=bb503adc54482a5fc92578a4a6d1f7866deb31f09f21608dbdc1442f7079792b" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fteamai.com%...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Gemini** 2.5 Pro: Google's Most Powerful AI Yet — Complete Guide 2026</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Gemini 2.5 Pro: Google's Most Powerful AI Yet — Complete Guide 2026...</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdevstarsj.github.io%2Fai%2Dtools%2F2026%2D04%2D10%2DGemini%2D2%2D5%2DPro%2DComplete%2DGuide%2D2026%2F&amp;rut=344d9171b9cdda7eef3bdffb58d8c464b25a6c480a73c1461f88a5f2750e4bf1" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fdevstarsj.g...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Google **Gemini** Upgrades in 2026 | Engage Coders</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Google Gemini Upgrades in 2026 | Engage Coders...</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.engagecoders.com%2Fgoogle%2Dgemini%2Dupgrades%2Dnew%2Dai%2Dcapabilities%2Dannounced%2Dat%2Di%2Do%2F&amp;rut=fbaea83f2dc046dc781540c113d4a529f3a6a72467a4b3bc91402899122a56b0" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.engagec...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Gemini** 2.5 Flash | **Gemini** API | Google AI for Developers</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Gemini 2.5 Flash | Gemini API | Google AI for Developers...</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fai.google.dev%2Fgemini%2Dapi%2Fdocs%2Fmodels%2Fgemini%2D2.5%2Dflash&amp;rut=e21bdee8388a21c88d157ba2be46037064dfb0303714015cc58f4265d04759f7" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fai.google.d...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Gemini** 2.5: Updates to our family of thinking models - Google ...</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Gemini 2.5: Updates to our family of thinking models - Google ......</div>
+                        <div class="features"><span class="feature-tag">Gemini</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdevelopers.googleblog.com%2Fen%2Fgemini%2D2%2D5%2Dthinking%2Dmodel%2Dupdates%2F&amp;rut=5c84dc57546f66894eb7445c336950cd2cefe99e257ce577fc5e44946edc72f0" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fdevelopers....</a></div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+
+            <div class="company-section" id="claude">
+                <div class="company-header claude">
+                    <h2>🟠 Claude (Anthropic)</h2>
+                    <div class="tagline">构建安全、有益的 AI 系统</div>
+                </div>
+                <div class="products-grid">
+                    
+                    <div class="product-card">
+                        <h3>Higher usage limits for **Claude** and a compute deal with SpaceX</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Higher usage limits for Claude and a compute deal with SpaceX...</div>
+                        <div class="features"><span class="feature-tag">Claude</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2Fnews%2Fhigher%2Dlimits%2Dspacex&amp;rut=b1a4954b31256614ad260004c179364e4e7574c96457ad47f98c14ea3e1e5129" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthrop...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Home &#92; **Anthropic**</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Home &#92; Anthropic...</div>
+                        <div class="features"><span class="feature-tag">Anthropic</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2F&amp;rut=b3aff622ab8a1b91dbbeabf2a487c599e482275b869dc091e421a1c18f5f2bd2" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthrop...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Claude** Mythos Preview &#92; red.anthropic.com</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Claude Mythos Preview &#92; red.anthropic.com...</div>
+                        <div class="features"><span class="feature-tag">Claude</span><span class="feature-tag">Anthropic</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fred.anthropic.com%2F2026%2Fmythos%2Dpreview%2F&amp;rut=0fce5e13f4fa6c1ec129707b3840bcd480fdc04dbdbac19a710e44c8fc64f16a" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fred.anthrop...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Claude** 4がさらに進化 | **Claude** | 今すぐ無料で使用</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Claude 4がさらに進化 | Claude | 今すぐ無料で使用...</div>
+                        <div class="features"><span class="feature-tag">Claude</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo.com%2Fy.js%3Fad_domain%3Dlorka.ai%26ad_provider%3Dbingv7aa%26ad_type%3Dtxad%26click_metadata%3DOczJ%252DYrHkv%252D%252DNxBQBMxxzbS3IsMQxEGrQOja9pLZrKS5uSOIKwqagoLDHopqDDxljTujSkOsrBKNr2dJrVvAc3q0e_fyASyWr0ddtNRjE6ZOiKQm5c3OGfBAHR_tYCCbOcXE8U6AVEe%252D42E4B%252DWCr0vjXKO8_j_7%252DwAl2bQy64Y.Lfab9O%252Dd9QUVXyIgF_Zzgg%26rut%3D59b1724029ee238d51b969b973cabda6ee6990f83e62347a743a4878d0d257fe%26u3%3Dhttps%253A%252F%252Fwww.bing.com%252Faclick%253Fld%253De8txSrVoQE9F9NIFavhCqkXDVUCUzpjTEAiBLEW7xQcSocNBdMq1F9MkxH9yTywvG0BeccVBbjVVHL_qlsYnvKRJ7ygF7E1oxfzKBBswMyhcOolAdrissIPz8krI6xREqunuKI53yVIwcl9boqzZV%252DoXON88Piy3sJWVx%252DwHZF4d%252DhWSqgH1Kzdc5V5oHCZJ5vC7OeRSVjPZOP0Yl1OIz0r8RTlpo%2526u%253DaHR0cHMlM2ElMmYlMmZ3d3cuYXBwLmxvcmthLmFpJTJmbCUyZmNoYXQlMmYwNCUzZm1vZGVsJTNkY2xhdWRlJTI2dXRtX3NvdXJjZSUzZGJpbmclMjZ1dG1fbWVkaXVtJTNkY3BjJTI2dXRtX2NhbXBhaWduJTNkNTcxMDI5NzA1JTI2dXRtX3Rlcm0lM2RDbGF1ZGUlMjZ1dG1fY29udGVudCUzZCUyNnV0bV9hZGdyb3VwJTNkMTE4NDE3NjE3NDgzMzg5OSUyNnV0bV9uZXR3b3JrJTNkcyUyNnV0bV9kZXZpY2UlM2RjJTI2dXRtX2RldmljZW1vZGVsJTNkJTI2dXRtX21hdGNodHlwZSUzZHAlMjZ1dG1fbG9jX3BoeXNpY2FsX21zJTNkMTQwMDMxJTI2bXNjbGtpZCUzZDVmN2ViOWQ0ZWY4YzExNjllYmM1ZDNkM2FhNDU2MGQ3%2526rlid%253D5f7eb9d4ef8c1169ebc5d3d3aa4560d7%26vqd%3D4%2D194171542853945468346968412018801904904%26iurl%3D%257B1%257DIG%253DDCFBDDAAE7414CF6B2C5FA79C0EEAD8B%2526CID%253D3A47D8651E866D9B3914CF3F1F836CA3%2526ID%253DDevEx%252C5041.1&amp;rut=4f3099efd6788e70f42138fbbd294fc8411f5dc70821c64f0b29ca1a2767d97e" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo....</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>**Claude** 4.6 is Now Available | Chatbot AI</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Claude 4.6 is Now Available | Chatbot AI...</div>
+                        <div class="features"><span class="feature-tag">Claude</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo.com%2Fy.js%3Fad_domain%3Dchatbotai.co%26ad_provider%3Dbingv7aa%26ad_type%3Dtxad%26click_metadata%3DKY_JqUMOtvCqKOJycdxVPG18DckM5IteQndJmXd_lD9dEVYMfrlSzHqkGG5pARdRW2%252Dw18BoWPBMXTqaAfw9YWzNfXjtIxAmuYp%252DudC551WiDwhVdSOfyfK%252DjUPVx2oeLFQNqurTM%252DE679XKhrU9zbrq3p5xbuJD7FiO71nl5IY.J3iV0bVvZ61vaWXEyJyd1w%26rut%3D51d63a1045f2b41f751fb55deb8973b892c1b38a9987b390ecfd406904fa721c%26u3%3Dhttps%253A%252F%252Fwww.bing.com%252Faclick%253Fld%253De8cU3Szm0%252DKPZaY5AgNEq3dDVUCUxeACk54%252DLMI3lTr8lFcMZ_xzMCLM49hYjiG1RxsPbxLK41NOTDlB2OEun1cFculPU02dC4g269SILa9oowJUbuV%252DjnLyRATyjQ9_ei5OrOxVfMvC6E1AYV3cZUPiucq8fLgj_1DPZpfO_seRejC%252D0i6wxW0zPc3rHnjD8XVCLddhXh1G8GOsClTTB3uogwjMg%2526u%253DaHR0cHMlM2ElMmYlMmZjaGF0Ym90YWkuY28lMmZvbmJvYXJkaW5nJTJmbXVsdGktbGxtLW1vZGVsJTJmY2xhdWRlJTNmdXRtX3NvdXJjZSUzZGJpbmclMjZ1dG1fbWVkaXVtJTNkd2ViJTI2dXRtX2NhbXBhaWduJTNkY2hhdGJvdGFpX3dlYl9ibmdfc2VhcmNoX3dvX2VuX3B1cmNoYXNlX2NsYXVkZV8wOTAzMjYlMjZ1dG1fY29udGVudCUzZGNoYXRib3RhaV93ZWJfYm5nX3NlYXJjaF93b19lbl9wdXJjaGFzZV9jbGF1ZGVfMDkwMzI2JTI2dXRtX3Rlcm0lM2RjbGF1ZGUlMjZtYXRjaHR5cGUlM2RwJTI2ZGV2aWNlJTNkYyUyNm5ldHdvcmslM2RzJTI2cGxhY2VtZW50JTNkJTI2Y3JlYXRpdmUlM2Q4Mjg3NjEwOTIwNDU1MSUyNmNhbXBhaWduX2lkJTNkNTIzOTU5NTIxJTI2YWRncm91cF9pZCUzZDEzMjYwMTM3ODcyNDgwNzYlMjZsb2NfaW50ZXJlc3RfbXMlM2QlN2JMb2NJbnRlcmVzdE1zJTdkJTI2bG9jX3BoeXNpY2FsX21zJTNkJTdiTG9jUGh5c2ljYWxNcyU3ZCUyNm1zY2xraWQlM2Q5OWUxN2NjMThiZDcxYjI4MDkwMjE2YzZjZTFlODZjMyUyNmdlbyUzZCU3Ym1zbG9jcGh5JTdkJTI2bGFuZyUzZCU3Ykxhbmd1YWdlJTdk%2526rlid%253D99e17cc18bd71b28090216c6ce1e86c3%26vqd%3D4%2D278389450773576098066850763137240768993%26iurl%3D%257B1%257DIG%253DDCFBDDAAE7414CF6B2C5FA79C0EEAD8B%2526CID%253D3A47D8651E866D9B3914CF3F1F836CA3%2526ID%253DDevEx%252C5045.1&amp;rut=005c8d564784aa81fea0094904f0f3ae328dc5de76067899d1200b9c714c8dc5" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo....</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Release notes | **Claude** Help Center</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Release notes | Claude Help Center...</div>
+                        <div class="features"><span class="feature-tag">Claude</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fsupport.claude.com%2Fen%2Farticles%2F12138966%2Drelease%2Dnotes&amp;rut=8f84f91e4c3fde84743559fb6cd1d3456a471208c02780b6c20643960280d85a" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fsupport.cla...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Newsroom &#92; **Anthropic**</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Newsroom &#92; Anthropic...</div>
+                        <div class="features"><span class="feature-tag">Anthropic</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2Fnews&amp;rut=adf3d81bd64723e8d0a1a27794efe19e2d5b3290170f17e16b98e8a1c0c4a5a4" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthrop...</a></div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <h3>Every **Claude** Model Released Since January 2026: The Complete Timeline</h3>
+                        <div class="date">📅 2026</div>
+                        <div class="description">关于 Every Claude Model Released Since January 2026: The Complete Timeline...</div>
+                        <div class="features"><span class="feature-tag">Claude</span></div>
+                        <div class="source">🔗 来源: <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fadam.holter.com%2Fevery%2Dnew%2Dclaude%2Dlaunch%2Dsince%2Djanuary%2D2026%2Dfull%2Dtimeline%2F&amp;rut=f6ef0971b052c3bb7f52703edbc3068b488a35c28e94fc098b02e6dad66e8fd3" target="_blank">//duckduckgo.com/l/?uddg=https%3A%2F%2Fadam.holter...</a></div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+
+        <!-- Comparison Section -->
+        <div class="company-section" id="comparison">
+            <div class="comparison-section">
+                <h2>📊 产品功能对比矩阵</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>功能特性</th>
+                            <th class="openai">OpenAI</th>
+                            <th class="google">Google AI</th>
+                            <th class="claude">Claude</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>最新大模型</td>
+                            <td>GPT-4o / o3</td>
+                            <td>Gemini 2.5 Pro</td>
+                            <td>Claude 3.7</td>
+                        </tr>
+                        <tr>
+                            <td>多模态能力</td>
+                            <td>✅ 文本/图像/音频/视频</td>
+                            <td>✅ 文本/图像/视频</td>
+                            <td>✅ 文本/图像</td>
+                        </tr>
+                        <tr>
+                            <td>上下文窗口</td>
+                            <td>200K tokens</td>
+                            <td>1M tokens</td>
+                            <td>200K tokens</td>
+                        </tr>
+                        <tr>
+                            <td>Agent 能力</td>
+                            <td>Operator / Deep Research</td>
+                            <td>Project Mariner / Astra</td>
+                            <td>Claude Code</td>
+                        </tr>
+                        <tr>
+                            <td>代码能力</td>
+                            <td>⭐⭐⭐⭐⭐</td>
+                            <td>⭐⭐⭐⭐</td>
+                            <td>⭐⭐⭐⭐⭐</td>
+                        </tr>
+                        <tr>
+                            <td>推理能力</td>
+                            <td>o1/o3 系列强化学习</td>
+                            <td>Gemini Flash 2.0</td>
+                            <td>Extended Thinking</td>
+                        </tr>
+                        <tr>
+                            <td>API 可用性</td>
+                            <td>✅ 稳定</td>
+                            <td>✅ 稳定</td>
+                            <td>✅ 稳定</td>
+                        </tr>
+                        <tr>
+                            <td>定价策略</td>
+                            <td>免费+付费分层</td>
+                            <td>免费+Ultra订阅</td>
+                            <td>免费+Pro订阅</td>
+                        </tr>
+                        <tr>
+                            <td>特色功能</td>
+                            <td>Sora视频生成</td>
+                            <td>Veo/Imagen视频图片</td>
+                            <td>安全对齐优先</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Market Analysis -->
+        <div class="company-section" id="market">
+            <div class="market-section">
+                <h2>📈 市场分析与趋势预测</h2>
+                <div class="market-grid">
+                    <div class="market-card">
+                        <h4>🔵 OpenAI 市场定位</h4>
+                        <p>市场领导者，持续引领大模型技术革新。聚焦企业级市场，通过 API 和订阅服务盈利。Sora 和 Operator 展示多模态和 Agent 能力。</p>
+                    </div>
+                    <div class="market-card">
+                        <h4>🟢 Google AI 市场定位</h4>
+                        <p>依托搜索和云服务生态，提供差异化 AI 服务。Gemini 在长上下文和多模态方面有优势，整合 Google 全产品线。</p>
+                    </div>
+                    <div class="market-card">
+                        <h4>🟠 Claude 市场定位</h4>
+                        <p>安全优先理念，深耕特定垂直领域。Claude Code 聚焦开发者市场，在代码能力和安全性上建立差异化优势。</p>
+                    </div>
+                    <div class="market-card">
+                        <h4>🔮 2026下半年趋势预测</h4>
+                        <p>1. Agent 能力成为竞争核心<br>2. 长上下文竞争加剧<br>3. 视频生成能力快速迭代<br>4. 定价策略趋于多元化</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="market-section">
+                <h2>📅 重要发布事件时间线 (2026)</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="date">2026年1月</div>
+                        <div class="title">OpenAI 发布 GPT-4o with Vision</div>
+                        <div class="desc">原生多模态模型，支持实时语音和视频理解</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="date">2026年2月</div>
+                        <div class="title">Google Gemini 2.0 Ultra 发布</div>
+                        <div class="desc">1M token 上下文，支持更复杂推理任务</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="date">2026年3月</div>
+                        <div class="title">Claude 4 系列发布</div>
+                        <div class="desc">增强推理能力，全新 Agent 架构</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="date">2026年4月</div>
+                        <div class="title">OpenAI o3 推理模型上线</div>
+                        <div class="desc">强化学习驱动的推理能力，数学/代码大幅提升</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="date">2026年5月</div>
+                        <div class="title">Google AI 新品发布</div>
+                        <div class="desc">Veo 3, Imagen 4, Project Astra 进展</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sources -->
+        <div class="sources-section">
+            <h3>🔗 参考来源</h3>
+            <div class="source-list">
+                
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo.com%2Fy.js%3Fad_domain%3Dmonotaro.com%26ad_provider%3Dbingv7aa%26ad_type%3Dtxad%26click_metadata%3DDWKtASF7fWisWqS8e4sZU6NZfXawa0j7hJX4%252DgYtvXQ7jNm9WNKvugdnBi2LfFajwf0W9z2HW%252DohdU7Sckn3Ob5jBJI6ux57gu1mlAYqGEa8vlKWdcTJs7sqiDChIvk4cdYuveERjgZZY3Kw6gyjQMIwEn2Mp1wTysgRYyqQ5Uo.3Xi8CP7uhTXLTc3t6L1xOg%26rut%3D15419205b2467a5afac5446e70e0caa36294e26cf410920d48cfa2c73aebccfc%26u3%3Dhttps%253A%252F%252Fwww.bing.com%252Faclick%253Fld%253De8AieVryjJbirdtuZPfFcm4jVUCUyfTw8%252DUEFCvje_n%252DIlegFXGhE04_XZIFVB9G4P9rZc1yddLmd%252DBplCOgpxyx%252D06l5ENITb23mddeBRKYlcLLyma0HWiTFTk6lpRiv5fM4LBQFifPa%252DdiJFnjuSw6A7BzRrVx7fKyFK3_pCSptvnQ9e8CE9CjcJ_BQVc4osovb5K1m8l48vjZcLsvLgvht%252D4g8%2526u%253DaHR0cHMlM2ElMmYlMmZ3d3cubW9ub3Rhcm8uY29tJTJmcyUyZiUzZmMlMjZxJTNkJTI1RTMlMjU4MiUyNUFCJTI1RTMlMjU4MyUyNUFDJTI1RTMlMjU4MyUyNUIzJTI1RTMlMjU4MyUyNTgwJTI1RTMlMjU4MyUyNUJDJTI1MjAyMDI2JTI2Y3FfcGx0JTNkYnAlMjZjcV9uZXQlM2RzJTI2dXRtX3NvdXJjZSUzZGJpbmclMjZ1dG1fbWVkaXVtJTNkY3BjJTI2dXRtX2NhbXBhaWduJTNkMTgwNjk4NDIyXzUzMzQ0Mzg5MCUyNnV0bV9jb250ZW50JTNkMTM1MDIwMjk5MjcwMjA4MiUyNnV0bV90ZXJtJTNkYl84NDM4ODExMTA5NzYwNl9rd2QtODQzODg5Mjk2NzE5NzklM2Fsb2MtOTZfJTI2bXNjbGtpZCUzZDRhM2UxYjYxMTlmMDFmMzJmMTJhNzE2NjVjNTc1OWUy%2526rlid%253D4a3e1b6119f01f32f12a71665c5759e2%26vqd%3D4%2D221866614799171841774757660513199990162%26iurl%3D%257B1%257DIG%253D92A1BBAEB9D84AD8AC6CE2C9A6A1976A%2526CID%253D398591EE329C65CA3F5586B4330064D5%2526ID%253DDevEx%252C5047.1&amp;rut=7cc9322cad9fa503d78f8e5a3e8e716bc335ae30d4c5993760b1b0506e59157b" target="_blank">カレンダー 2026なら | カレンダーでお買得品をチェック | 【モノタロウ】公式通販サイト</a>
+                        <div class="snippet">关于 カレンダー 2026なら | カレンダーでお買得品をチェック | 【モノタロウ】公式通販サイト...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fintroducing%2Dgpt%2D5%2D5%2F&amp;rut=c8d1452c8b8ac2e3bf1b8f7c706296b51c5907357c6b4f64d17a051f004816fe" target="_blank">Introducing GPT-5.5 | OpenAI</a>
+                        <div class="snippet">关于 Introducing GPT-5.5 | OpenAI...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Fnews%2F&amp;rut=a6cc885e0f2076e7718a1e14f5de85e5c6dee6055984d1fd6008d56f7a333c56" target="_blank">OpenAI News</a>
+                        <div class="snippet">关于 OpenAI News...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fintroducing%2Dchatgpt%2Dfutures%2Dclass%2Dof%2D2026%2F&amp;rut=49fe9ddcc26659b7ea20ff1fd24eeafb698b2dfb14f81fbc3890a957cb713d8f" target="_blank">Introducing ChatGPT Futures: Class of 2026 - OpenAI</a>
+                        <div class="snippet">关于 Introducing ChatGPT Futures: Class of 2026 - OpenAI...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Findex%2Fretiring%2Dgpt%2D4o%2Dand%2Dolder%2Dmodels%2F&amp;rut=3dc61a262f94d66278a6d2ba666245228be7f82af3be0966e645ce7125e0e66d" target="_blank">Retiring GPT‑4o, GPT‑4.1, GPT‑4.1 mini, and OpenAI o4-mini in ChatGPT</a>
+                        <div class="snippet">关于 Retiring GPT‑4o, GPT‑4.1, GPT‑4.1 mini, and OpenAI o4-mini in ChatGPT...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo.com%2Fy.js%3Fad_domain%3Dmonotaro.com%26ad_provider%3Dbingv7aa%26ad_type%3Dtxad%26click_metadata%3D_Q3nBEzmQBrZLtu1cTHM0bT1O__nnFbZ7utg4Vk_ofvGk7Zgx8F7joSH4TLZzL4UbvErpEVE8vF8Mrby9fX7rOuVD1imzWVAVGLQ9n4YjEPKc2K_NGXeIh_CnLUCYrN_XuYTh7RLyni05mj2%252DRXCuMC3I7Dl5gQEtetAnMWxtB4.xuij_0fdhsC77vr6Di9Q_g%26rut%3De93b5901085cf7065384423d39ec062a26ff8ac680096aaa8eefaed8b9b69b16%26u3%3Dhttps%253A%252F%252Fwww.bing.com%252Faclick%253Fld%253De80IhKFb8yXopnMC8nDVCIYTVUCUxPwvZ__nZj4HfD4OLzpjsnjrkPqI3SOsq5zQx1RICgknBzF0k5aHd4MHxtiIE3qSM4sTKQGtEbP9Z2j0RCBS8jl9GMdIodGVW2%252D0B87exE%252D7bX_p1TGPsFAzfDNWs0_pdxtXr8hPIExBanv49bNGj0BpII0htC3sIKb2DJpCmL8KyW_uqhIPObcj5vQHJzxoI%2526u%253DaHR0cHMlM2ElMmYlMmZ3d3cubW9ub3Rhcm8uY29tJTJmcyUyZiUzZmMlMjZxJTNkJTI1RTMlMjU4MiUyNUFCJTI1RTMlMjU4MyUyNUFDJTI1RTMlMjU4MyUyNUIzJTI1RTMlMjU4MyUyNTgwJTI1RTMlMjU4MyUyNUJDJTI1MjAyMDI2JTI2Y3FfcGx0JTNkYnAlMjZjcV9uZXQlM2RzJTI2dXRtX3NvdXJjZSUzZGJpbmclMjZ1dG1fbWVkaXVtJTNkY3BjJTI2dXRtX2NhbXBhaWduJTNkMTgwNjk4NDIyXzUzMzQ0Mzg5MCUyNnV0bV9jb250ZW50JTNkMTM1MDIwMjk5MjcwMjA4MiUyNnV0bV90ZXJtJTNkYl84NDM4ODExMTA5NzYwNl9rd2QtODQzODg5Mjk2NzE5NzklM2Fsb2MtOTZfJTI2bXNjbGtpZCUzZGMxZWYyMjI0MTdiNDEyNDg1ZDlkNDgyMzUyMDE5NjUw%2526rlid%253Dc1ef222417b412485d9d482352019650%26vqd%3D4%2D97829204990727791151803850123232756643%26iurl%3D%257B1%257DIG%253DF26754D4C5E7469CA63847ED8496B4B2%2526CID%253D1360ED63870A6E7D0FCEFA3986116FEA%2526ID%253DDevEx%252C5047.1&amp;rut=2f031861323e3d976111c62abc933c10d9e8df7b53ffa4519e2f0515e17be168" target="_blank">カレンダー 2026なら | 【モノタロウ】公式通販サイト | 良質な間接資材が安いモノタロウ</a>
+                        <div class="snippet">关于 カレンダー 2026なら | 【モノタロウ】公式通販サイト | 良質な間接資材が安いモノタロウ...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2F&amp;rut=d641fac8b838faab641d32cc7566015e016d5dc27ae8f67b9102ae17befc5e5a" target="_blank">Google DeepMind</a>
+                        <div class="snippet">关于 Google DeepMind...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2Fmodels%2Fgemini%2F&amp;rut=14e3a81b8dc5da9424bf96043e80e0f85c83152a29ea44533d7a88437d14a0b5" target="_blank">Gemini 3 — Google DeepMind</a>
+                        <div class="snippet">关于 Gemini 3 — Google DeepMind...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2Fmodels%2Fgemma%2Fgemma%2D4%2F&amp;rut=92fd4b7cd7b5e26fee7ae7510fdc13036ddcdcd5461043a1248c237bfe1d30a0" target="_blank">Gemma 4 — Google DeepMind</a>
+                        <div class="snippet">关于 Gemma 4 — Google DeepMind...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fdeepmind.google%2Fblog%2F&amp;rut=5daf4da6e8c4c04b48f095ebb7c27a63b0040bfb1bbf015e1c016b9c8866f792" target="_blank">News — Google DeepMind</a>
+                        <div class="snippet">关于 News — Google DeepMind...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fduckduckgo.com%2Fy.js%3Fad_domain%3Dmonotaro.com%26ad_provider%3Dbingv7aa%26ad_type%3Dtxad%26click_metadata%3D1S_bzBrgUZpP0MYrZ9C5dVNZlDtcHi5F5dbKJVvk09PqZgQNOx0hkS3loBlHgAgdUkihGiFH1mbhCrIMv_4dduLmlGvr7mQR8jgNx7LRNLCB_1oYDK%252D14eAWLCeYVAOHiZryjhk9LRmYi2e2EEYja9JLdtLRkoHn06jiINPRbsc.RFBNJ8lLkpBrqyEErQ9%252DGA%26rut%3D9e155de5afc304e7dc271835f483001b5f3b18e3662547d3628fe088f39a618f%26u3%3Dhttps%253A%252F%252Fwww.bing.com%252Faclick%253Fld%253De8y_qBrIop8tecqv4C901AZjVUCUzA2Ow9tangZ_RLe0ZOqaTJ5lvlW3widuVdMRS9vM5Q9Bc8yxcfb6p6TbdfpzX2Cd_1s%252Dn%252DTQgMHMezHfwxkHoGg4OpmHXQHiIveZSljkwD6UMqP%252Dg36XAkqqd1hcHzo3PTc0NYteKL7u2rcIme9wPh10WywZDDAe7%252DZSG86qAN6vb2VMJt9MAVG7UaBq%252DJq5M%2526u%253DaHR0cHMlM2ElMmYlMmZ3d3cubW9ub3Rhcm8uY29tJTJmcyUyZiUzZmMlMjZxJTNkJTI1RTMlMjU4MiUyNUFCJTI1RTMlMjU4MyUyNUFDJTI1RTMlMjU4MyUyNUIzJTI1RTMlMjU4MyUyNTgwJTI1RTMlMjU4MyUyNUJDJTI1MjAyMDI2JTI2Y3FfcGx0JTNkYnAlMjZjcV9uZXQlM2RzJTI2dXRtX3NvdXJjZSUzZGJpbmclMjZ1dG1fbWVkaXVtJTNkY3BjJTI2dXRtX2NhbXBhaWduJTNkMTgwNjk4NDIyXzUzMzQ0Mzg5MCUyNnV0bV9jb250ZW50JTNkMTM1MDIwMjk5MjcwMjA4MiUyNnV0bV90ZXJtJTNkYl84NDM4ODExMTA5NzYwNl9rd2QtODQzODg5Mjk2NzE5NzklM2Fsb2MtOTZfJTI2bXNjbGtpZCUzZDdjOTBkMWIwNjUxNDE2M2VmZWZiYmJiNzIwZDBlYzg1%2526rlid%253D7c90d1b06514163efefbbbb720d0ec85%26vqd%3D4%2D237211797298300361132899324203098221050%26iurl%3D%257B1%257DIG%253D946AA953EFC144E48A523AF8359248B7%2526CID%253D06CA81FAE99F6CD3148F96A0E8166DB6%2526ID%253DDevEx%252C5047.1&amp;rut=dcfa5c7ac89787e7376a38b9d169c8fb3f68cbca67bd3689bff803c053cca6af" target="_blank">カレンダー 2026なら | カレンダーでお買得品をチェック | 【モノタロウ】公式通販サイト</a>
+                        <div class="snippet">关于 カレンダー 2026なら | カレンダーでお買得品をチェック | 【モノタロウ】公式通販サイト...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2Fnews%2Fhigher%2Dlimits%2Dspacex&amp;rut=b1a4954b31256614ad260004c179364e4e7574c96457ad47f98c14ea3e1e5129" target="_blank">Higher usage limits for Claude and a compute deal with SpaceX</a>
+                        <div class="snippet">关于 Higher usage limits for Claude and a compute deal with SpaceX...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2Fnews%2Fenterprise%2Dai%2Dservices%2Dcompany&amp;rut=84f5d1e1c31090b3819eeee77a3e386727b729fac2b8cd6a5db32e0ece424b9f" target="_blank">Building a new enterprise AI services company with Blackstone, Hellman ...</a>
+                        <div class="snippet">关于 Building a new enterprise AI services company with Blackstone, Hellman ......</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.anthropic.com%2F&amp;rut=b3aff622ab8a1b91dbbeabf2a487c599e482275b869dc091e421a1c18f5f2bd2" target="_blank">Home &#92; Anthropic</a>
+                        <div class="snippet">关于 Home &#92; Anthropic...</div>
+                    </div>
+                    
+
+                    <div class="source-item">
+                        <a href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fred.anthropic.com%2F2026%2Fmythos%2Dpreview%2F&amp;rut=0fce5e13f4fa6c1ec129707b3840bcd480fdc04dbdbac19a710e44c8fc64f16a" target="_blank">Claude Mythos Preview &#92; red.anthropic.com</a>
+                        <div class="snippet">关于 Claude Mythos Preview &#92; red.anthropic.com...</div>
+                    </div>
+                    
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>本报告由 AI Agent 自动生成 | 数据来源：公开网络搜索</p>
+        <div class="disclaimer">
+            ⚠️ 免责声明：报告中包含的信息基于网络搜索结果，可能存在时效性偏差。建议读者核实关键信息后再做决策。
+        </div>
+    </footer>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all sections
+            document.querySelectorAll('.company-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            // Deactivate all tabs
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            // Show selected section
+            document.getElementById(tabId).classList.add('active');
+            // Activate selected tab
+            event.target.classList.add('active');
+        }
+
+        // Show first tab by default
+        document.querySelector('.nav-tab').click();
+    </script>
+</body>
+</html>

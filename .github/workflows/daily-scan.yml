@@ -1,0 +1,72 @@
+name: Daily AI Product Scan
+
+on:
+  # 定时触发 - 每天 8:00 UTC (北京时间 16:00)
+  schedule:
+    - cron: '0 8 * * *'
+
+  # 手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    name: Scan for New Products
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Run Scheduler Agent
+        run: |
+          cd agents/scheduler
+          python scheduler_agent.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for new products
+        id: check_new
+        run: |
+          if [ -f logs/latest_detection.md ]; then
+            echo "detection_report=$(cat logs/latest_detection.md)" >> $GITHUB_OUTPUT
+            echo "new_products=$(grep -c '## 检测到' logs/latest_detection.md)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Show detection result
+        run: |
+          echo "### Detection Report"
+          cat logs/latest_detection.md 2>/dev/null || echo "No detection report found"
+
+      - name: Trigger full workflow if new products
+        if: steps.check_new.outputs.new_products != '0'
+        run: |
+          echo "🎉 New products detected! Triggering full workflow..."
+
+          # Run Generator
+          cd agents/generator
+          python generator_agent.py
+
+          # Run Verifier
+          cd ../verifier
+          python verifier_agent.py --report ../reports/competitive_analysis_report.html
+
+          # Create output directory
+          mkdir -p output/latest
+          cp ../reports/*.html output/latest/ 2>/dev/null || true
+
+      - name: Commit and push changes
+        if: steps.check_new.outputs.new_products != '0'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "ci: Daily scan $(date +%Y-%m-%d) - New products detected"
+          git push

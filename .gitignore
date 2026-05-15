@@ -35,4 +35,4 @@ reports/*.html
 !reports/.gitkeep
 
 # State files
-logs/workflow_state.json
+logs/workflow_state.json.git-credentials

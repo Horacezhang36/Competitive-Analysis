@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京热门旅游地分析报告</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh; color: #e2e8f0;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        .hero { text-align: center; padding: 50px 20px 30px; }
+        .hero h1 {
+            font-size: 2.6em; font-weight: 800;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #fda085);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 10px;
+        }
+        .hero .subtitle { color: #a0aec0; font-size: 1em; }
+        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+        .stat-card {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 20px; text-align: center; backdrop-filter: blur(10px);
+        }
+        .stat-value {
+            font-size: 2em; font-weight: 700;
+            background: linear-gradient(135deg, #f6ad55, #ed64a6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .stat-label { color: #a0aec0; font-size: 0.85em; margin-top: 4px; }
+        .section-title { font-size: 1.4em; font-weight: 700; margin: 30px 0 16px; padding-left: 14px; border-left: 4px solid #ed64a6; }
+        .ranking {
+            background: rgba(255,255,255,0.05); border-radius: 14px; padding: 20px;
+            margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.08);
+        }
+        .rank-item {
+            display: flex; align-items: center; padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); gap: 14px;
+        }
+        .rank-item:last-child { border-bottom: none; }
+        .rank-num { font-size: 1.3em; width: 36px; text-align: center; }
+        .rank-name { font-weight: 600; flex: 1; }
+        .rank-rating { color: #f6ad55; font-weight: 600; }
+        .rank-reviews { color: #718096; font-size: 0.85em; }
+        .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .cat-item {
+            background: rgba(255,255,255,0.05); border-radius: 10px; padding: 14px 16px;
+            display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.06);
+        }
+        .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .cat-name { font-weight: 600; flex: 1; }
+        .cat-count { color: #a0aec0; font-size: 0.85em; }
+        .cat-rating { color: #f6ad55; font-size: 0.85em; font-weight: 600; }
+        .cards { display: flex; flex-direction: column; gap: 20px; }
+        .card {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-header {
+            padding: 18px 24px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .card-title-row { display: flex; flex-direction: column; gap: 2px; }
+        .card-title { font-size: 1.2em; font-weight: 700; }
+        .card-en { font-size: 0.78em; color: #718096; }
+        .category-tag { padding: 5px 14px; border-radius: 20px; font-size: 0.8em; font-weight: 600; color: #fff; white-space: nowrap; }
+        .card-body { display: grid; grid-template-columns: 1fr 180px; gap: 20px; padding: 20px 24px; }
+        .card-info { display: flex; flex-direction: column; gap: 10px; }
+        .info-row { display: flex; align-items: center; gap: 8px; }
+        .stars { color: #f6ad55; font-size: 1.1em; letter-spacing: 2px; }
+        .rating-num { font-weight: 700; font-size: 1.2em; color: #f6ad55; }
+        .reviews { color: #718096; font-size: 0.85em; }
+        .description { color: #cbd5e0; line-height: 1.6; font-size: 0.9em; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.85em; color: #a0aec0; }
+        .highlights { color: #ecc94b; font-size: 0.85em; line-height: 1.5; }
+        .hl-label { font-weight: 600; }
+        .tips {
+            background: rgba(237, 100, 166, 0.1); border-left: 3px solid #ed64a6;
+            padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 0.85em; color: #fbb6ce; line-height: 1.5;
+        }
+        .card-chart { display: flex; flex-direction: column; align-items: center; }
+        .chart-title { font-size: 0.75em; color: #718096; margin-bottom: 8px; text-align: center; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; width: 100%; }
+        .bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+        .bar { width: 100%; max-width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
+        .bar:hover { opacity: 0.7; }
+        .bar-label { font-size: 0.55em; color: #4a5568; margin-top: 3px; transform: rotate(-45deg); white-space: nowrap; }
+        footer { text-align: center; padding: 40px 20px; color: #4a5568; font-size: 0.8em; }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.6em; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .card-body { grid-template-columns: 1fr; }
+            .bar-chart { height: 80px; }
+            .meta-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🏯 北京热门旅游地分析报告</h1>
+            <p class="subtitle">基于多维度数据的北京旅游景点综合分析 | 生成时间: 2026-06-15 06:55 UTC</p>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-card"><div class="stat-value">12</div><div class="stat-label">收录景点</div></div>
+            <div class="stat-card"><div class="stat-value">4.5</div><div class="stat-label">平均评分</div></div>
+            <div class="stat-card"><div class="stat-value">171万+</div><div class="stat-label">累计评价</div></div>
+            <div class="stat-card"><div class="stat-value">3</div><div class="stat-label">免费景点</div></div>
+        </div>
+        <h2 class="section-title">🏆 热门排行榜 TOP 8</h2>
+        <div class="ranking">            <div class="rank-item">
+                <span class="rank-num">🥇</span>
+                <span class="rank-name">故宫博物院</span>
+                <span class="rank-rating">⭐ 4.8</span>
+                <span class="rank-reviews">28万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">🥈</span>
+                <span class="rank-name">八达岭长城</span>
+                <span class="rank-rating">⭐ 4.7</span>
+                <span class="rank-reviews">22万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">🥉</span>
+                <span class="rank-name">颐和园</span>
+                <span class="rank-rating">⭐ 4.7</span>
+                <span class="rank-reviews">19万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">4</span>
+                <span class="rank-name">天坛公园</span>
+                <span class="rank-rating">⭐ 4.6</span>
+                <span class="rank-reviews">16万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">5</span>
+                <span class="rank-name">雍和宫</span>
+                <span class="rank-rating">⭐ 4.6</span>
+                <span class="rank-reviews">9万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">6</span>
+                <span class="rank-name">798艺术区</span>
+                <span class="rank-rating">⭐ 4.5</span>
+                <span class="rank-reviews">12万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">7</span>
+                <span class="rank-name">北海公园</span>
+                <span class="rank-rating">⭐ 4.5</span>
+                <span class="rank-reviews">11万+评价</span>
+            </div>            <div class="rank-item">
+                <span class="rank-num">8</span>
+                <span class="rank-name">什刹海</span>
+                <span class="rank-rating">⭐ 4.5</span>
+                <span class="rank-reviews">9万+评价</span>
+            </div></div>
+        <h2 class="section-title">📂 景点分类统计</h2>
+        <div class="cat-grid">            <div class="cat-item">
+                <span class="cat-dot" style="background:#e53e3e"></span>
+                <span class="cat-name">历史文化</span>
+                <span class="cat-count">4个景点</span>
+                <span class="cat-rating">均分 4.6</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#38a169"></span>
+                <span class="cat-name">皇家园林</span>
+                <span class="cat-count">3个景点</span>
+                <span class="cat-rating">均分 4.6</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#dd6b20"></span>
+                <span class="cat-name">胡同文化</span>
+                <span class="cat-count">1个景点</span>
+                <span class="cat-rating">均分 4.4</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#805ad5"></span>
+                <span class="cat-name">艺术文化</span>
+                <span class="cat-count">1个景点</span>
+                <span class="cat-rating">均分 4.5</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#3182ce"></span>
+                <span class="cat-name">现代建筑</span>
+                <span class="cat-count">1个景点</span>
+                <span class="cat-rating">均分 4.3</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#d69e2e"></span>
+                <span class="cat-name">宗教文化</span>
+                <span class="cat-count">1个景点</span>
+                <span class="cat-rating">均分 4.6</span>
+            </div>            <div class="cat-item">
+                <span class="cat-dot" style="background:#319795"></span>
+                <span class="cat-name">自然风光</span>
+                <span class="cat-count">1个景点</span>
+                <span class="cat-rating">均分 4.5</span>
+            </div></div>
+        <h2 class="section-title">📋 详细景点分析</h2>
+        <div class="cards">        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">故宫博物院</h3>
+                    <span class="card-en">The Forbidden City</span>
+                </div>
+                <span class="category-tag" style="background:#e53e3e">历史文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.8</span>
+                        <span class="reviews">（28万+条评价）</span>
+                    </div>
+                    <p class="description">世界最大的宫殿建筑群，明清两代皇家宫殿，UNESCO世界文化遗产。拥有超过180万件珍贵文物，是中国古代建筑艺术的巅峰之作。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>东城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>1号线天安门东站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥60（旺季60元/淡季40元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>3-5小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 极高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 9月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 太和殿, 乾清宫, 珍宝馆, 钟表馆, 御花园</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 建议提前7天在官网预约，旺季一票难求</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:60%;background:#4299e1" title="1月: 120K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:50%;background:#4299e1" title="2月: 100K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:70%;background:#4299e1" title="3月: 140K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:80%;background:#48bb78" title="4月: 160K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:90%;background:#48bb78" title="5月: 180K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:85%;background:#48bb78" title="6月: 170K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:95%;background:#48bb78" title="7月: 190K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 200K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:75%;background:#48bb78" title="9月: 150K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:80%;background:#48bb78" title="10月: 160K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:65%;background:#4299e1" title="11月: 130K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:55%;background:#4299e1" title="12月: 110K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">八达岭长城</h3>
+                    <span class="card-en">Badaling Great Wall</span>
+                </div>
+                <span class="category-tag" style="background:#e53e3e">历史文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.7</span>
+                        <span class="reviews">（22万+条评价）</span>
+                    </div>
+                    <p class="description">万里长城最精华段，明长城代表性段落，世界文化遗产。地势险峻，气势磅礴，是'不到长城非好汉'的打卡圣地。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>延庆区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>S2线八达岭站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥40（40元（旺季）/35元（淡季））</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>3-4小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 极高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 9月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 北一楼至北八楼, 好汉坡, 缆车观光, 长城博物馆</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 建议早8点前到达避开人流高峰，可乘S2线或877路公交</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:42%;background:#a0aec0" title="1月: 80K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:36%;background:#a0aec0" title="2月: 70K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:57%;background:#4299e1" title="3月: 110K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#48bb78" title="4月: 150K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:89%;background:#48bb78" title="5月: 170K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:84%;background:#48bb78" title="6月: 160K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:94%;background:#48bb78" title="7月: 180K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 190K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:73%;background:#4299e1" title="9月: 140K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#48bb78" title="10月: 150K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:52%;background:#4299e1" title="11月: 100K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:47%;background:#a0aec0" title="12月: 90K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">颐和园</h3>
+                    <span class="card-en">Summer Palace</span>
+                </div>
+                <span class="category-tag" style="background:#38a169">皇家园林</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.7</span>
+                        <span class="reviews">（19万+条评价）</span>
+                    </div>
+                    <p class="description">中国现存最大的皇家园林，以昆明湖和万寿山为主体，集传统造园艺术之大成，被誉为'皇家园林博物馆'。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>海淀区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>4号线北宫门站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥30（旺季30元/淡季20元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>3-4小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 6月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 佛香阁, 十七孔桥, 长廊, 石舫, 苏州街</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 推荐从东宫门进入，沿昆明湖顺时针游览</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:47%;background:#a0aec0" title="1月: 90K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:42%;background:#a0aec0" title="2月: 80K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:63%;background:#4299e1" title="3月: 120K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#48bb78" title="4月: 150K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:84%;background:#48bb78" title="5月: 160K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:89%;background:#48bb78" title="6月: 170K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:94%;background:#48bb78" title="7月: 180K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 190K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:73%;background:#4299e1" title="9月: 140K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:68%;background:#4299e1" title="10月: 130K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:52%;background:#4299e1" title="11月: 100K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:42%;background:#a0aec0" title="12月: 80K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">天坛公园</h3>
+                    <span class="card-en">Temple of Heaven</span>
+                </div>
+                <span class="category-tag" style="background:#e53e3e">历史文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.6</span>
+                        <span class="reviews">（16万+条评价）</span>
+                    </div>
+                    <p class="description">明清两代皇帝祭天祈谷的场所，祈年殿是北京标志性建筑之一。建筑布局精妙，声学设计独特，回音壁闻名遐迩。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>东城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>5号线天坛东门站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥15（旺季15元/淡季10元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>2-3小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 9月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 祈年殿, 回音壁, 圜丘坛, 皇穹宇, 丹陛桥</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 早上去可以看到市民晨练的热闹场景，很有生活气息</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:62%;background:#4299e1" title="1月: 100K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:56%;background:#a0aec0" title="2月: 90K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:68%;background:#4299e1" title="3月: 110K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:81%;background:#4299e1" title="4月: 130K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:87%;background:#4299e1" title="5月: 140K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:81%;background:#4299e1" title="6月: 130K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:93%;background:#48bb78" title="7月: 150K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 160K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:75%;background:#4299e1" title="9月: 120K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:68%;background:#4299e1" title="10月: 110K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:62%;background:#4299e1" title="11月: 100K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:56%;background:#a0aec0" title="12月: 90K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">雍和宫</h3>
+                    <span class="card-en">Lama Temple</span>
+                </div>
+                <span class="category-tag" style="background:#d69e2e">宗教文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.6</span>
+                        <span class="reviews">（9万+条评价）</span>
+                    </div>
+                    <p class="description">北京最大的藏传佛教寺院，曾是雍正帝的府邸。建筑宏伟，佛像精美，26米高的白檀木弥勒大佛举世闻名。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>东城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>2/5号线雍和宫站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥25（25元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>1-2小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 全年皆宜, 春节期间香火最旺</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 万福阁弥勒大佛, 雍和宫殿, 法轮殿, 青铜须弥山</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 初一、十五香客众多，可免费领取香火</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:69%;background:#a0aec0" title="1月: 90K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="2月: 130K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:76%;background:#4299e1" title="3月: 100K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:69%;background:#a0aec0" title="4月: 90K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:61%;background:#a0aec0" title="5月: 80K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:53%;background:#a0aec0" title="6月: 70K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:61%;background:#a0aec0" title="7月: 80K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:69%;background:#a0aec0" title="8月: 90K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:61%;background:#a0aec0" title="9月: 80K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:69%;background:#a0aec0" title="10月: 90K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:61%;background:#a0aec0" title="11月: 80K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:76%;background:#4299e1" title="12月: 100K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">798艺术区</h3>
+                    <span class="card-en">798 Art Zone</span>
+                </div>
+                <span class="category-tag" style="background:#805ad5">艺术文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.5</span>
+                        <span class="reviews">（12万+条评价）</span>
+                    </div>
+                    <p class="description">由老工厂改造的当代艺术区，汇集画廊、设计工作室、时尚店铺和餐厅。包豪斯风格建筑与现代艺术的完美融合，文艺青年必打卡。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>朝阳区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>14号线望京南站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>园区免费（部分展览收费）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>2-4小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 中</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 3月, 4月, 5月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> UCCA尤伦斯当代艺术中心, 木木美术馆, 火车头广场, 涂鸦墙, 艺术商店</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 周末有创意市集，建议预留半天时间慢慢逛</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:64%;background:#a0aec0" title="1月: 90K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:57%;background:#a0aec0" title="2月: 80K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#4299e1" title="3月: 110K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:85%;background:#4299e1" title="4月: 120K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:92%;background:#4299e1" title="5月: 130K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:85%;background:#4299e1" title="6月: 120K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="7月: 140K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="8月: 140K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#4299e1" title="9月: 110K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:71%;background:#4299e1" title="10月: 100K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:64%;background:#a0aec0" title="11月: 90K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:71%;background:#4299e1" title="12月: 100K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">北海公园</h3>
+                    <span class="card-en">Beihai Park</span>
+                </div>
+                <span class="category-tag" style="background:#38a169">皇家园林</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.5</span>
+                        <span class="reviews">（11万+条评价）</span>
+                    </div>
+                    <p class="description">中国现存最古老、最完整的皇家园林之一，白塔是标志性景观。'让我们荡起双桨'的灵感来源，湖光塔影美不胜收。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>西城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>6号线北海北站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥10（旺季10元/淡季5元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>2-3小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 中</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 6月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 白塔, 琼华岛, 九龙壁, 五龙亭, 静心斋</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 推荐划船游湖，夏季荷花盛开时景色最佳</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:43%;background:#a0aec0" title="1月: 70K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:37%;background:#a0aec0" title="2月: 60K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:56%;background:#a0aec0" title="3月: 90K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:68%;background:#4299e1" title="4月: 110K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:75%;background:#4299e1" title="5月: 120K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:81%;background:#4299e1" title="6月: 130K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:93%;background:#48bb78" title="7月: 150K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 160K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:62%;background:#4299e1" title="9月: 100K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:56%;background:#a0aec0" title="10月: 90K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:43%;background:#a0aec0" title="11月: 70K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:37%;background:#a0aec0" title="12月: 60K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">什刹海</h3>
+                    <span class="card-en">Shichahai</span>
+                </div>
+                <span class="category-tag" style="background:#319795">自然风光</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.5</span>
+                        <span class="reviews">（9万+条评价）</span>
+                    </div>
+                    <p class="description">由前海、后海、西海组成的历史文化风景区，周边遍布酒吧、餐厅和胡同。白天宁静优雅，夜晚热闹非凡，是老北京与现代都市的交汇点。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>西城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>8号线什刹海站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>免费</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>1-3小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 5月, 6月, 7月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 后海酒吧街, 银锭桥, 烟袋斜街, 恭王府, 荷花市场</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 推荐傍晚前往，先逛胡同再享受夜生活</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:52%;background:#4299e1" title="1月: 100K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:47%;background:#a0aec0" title="2月: 90K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:57%;background:#4299e1" title="3月: 110K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:68%;background:#4299e1" title="4月: 130K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#48bb78" title="5月: 150K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:84%;background:#48bb78" title="6月: 160K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:94%;background:#48bb78" title="7月: 180K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 190K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:73%;background:#4299e1" title="9月: 140K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:63%;background:#4299e1" title="10月: 120K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:52%;background:#4299e1" title="11月: 100K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:57%;background:#4299e1" title="12月: 110K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">景山公园</h3>
+                    <span class="card-en">Jingshan Park</span>
+                </div>
+                <span class="category-tag" style="background:#38a169">皇家园林</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.5</span>
+                        <span class="reviews">（7万+条评价）</span>
+                    </div>
+                    <p class="description">俯瞰故宫全景的最佳位置，万春亭是北京城中轴线的制高点。曾是明清皇家御苑，牡丹花季尤为壮观。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>西城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>8号线中国美术馆站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥2（2元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>1-1.5小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 中</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 9月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 万春亭故宫全景, 牡丹园, 崇祯自缢处, 中轴线地标</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 建议故宫游览结束后从神武门出来直接上景山，日落时分景色最佳</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:50%;background:#a0aec0" title="1月: 60K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:41%;background:#a0aec0" title="2月: 50K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:66%;background:#a0aec0" title="3月: 80K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:83%;background:#4299e1" title="4月: 100K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:91%;background:#4299e1" title="5月: 110K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:83%;background:#4299e1" title="6月: 100K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="7月: 120K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="8月: 120K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:75%;background:#a0aec0" title="9月: 90K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:66%;background:#a0aec0" title="10月: 80K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:50%;background:#a0aec0" title="11月: 60K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:50%;background:#a0aec0" title="12月: 60K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">南锣鼓巷</h3>
+                    <span class="card-en">Nanluoguxiang</span>
+                </div>
+                <span class="category-tag" style="background:#dd6b20">胡同文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.4</span>
+                        <span class="reviews">（14万+条评价）</span>
+                    </div>
+                    <p class="description">北京最古老的街区之一，700多年历史的胡同。两侧遍布特色小店、文创店铺、小吃摊和咖啡馆，是体验老北京胡同文化的绝佳去处。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>东城区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>6/8号线南锣鼓巷站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>免费</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>1-2小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 极高</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 3月, 4月, 5月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 特色文创店, 老北京小吃, 胡同建筑, 帽儿胡同, 雨儿胡同</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 建议工作日前往避开人流，可顺路逛什刹海</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:61%;background:#4299e1" title="1月: 110K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:55%;background:#4299e1" title="2月: 100K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:72%;background:#4299e1" title="3月: 130K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:83%;background:#48bb78" title="4月: 150K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:88%;background:#48bb78" title="5月: 160K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:83%;background:#48bb78" title="6月: 150K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:94%;background:#48bb78" title="7月: 170K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 180K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:77%;background:#4299e1" title="9月: 140K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:72%;background:#4299e1" title="10月: 130K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:61%;background:#4299e1" title="11月: 110K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:66%;background:#4299e1" title="12月: 120K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">圆明园遗址公园</h3>
+                    <span class="card-en">Old Summer Palace</span>
+                </div>
+                <span class="category-tag" style="background:#e53e3e">历史文化</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.4</span>
+                        <span class="reviews">（8万+条评价）</span>
+                    </div>
+                    <p class="description">清代皇家园林遗址，'万园之园'的沧桑见证。西洋楼遗址区的大水法残垣是圆明园的标志，荷花盛开时节景色绝美。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>海淀区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>4号线圆明园站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥10（10元（西洋楼遗址15元））</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>2-4小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 中</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 6月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 西洋楼遗址, 大水法, 福海, 荷花池, 全景模型馆</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 夏季荷花盛开时最美，可与颐和园安排在同一天游览</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:42%;background:#a0aec0" title="1月: 60K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:35%;background:#a0aec0" title="2月: 50K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:57%;background:#a0aec0" title="3月: 80K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:71%;background:#4299e1" title="4月: 100K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:78%;background:#4299e1" title="5月: 110K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:85%;background:#4299e1" title="6月: 120K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="7月: 140K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#4299e1" title="8月: 140K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:71%;background:#4299e1" title="9月: 100K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:64%;background:#a0aec0" title="10月: 90K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:50%;background:#a0aec0" title="11月: 70K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:42%;background:#a0aec0" title="12月: 60K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div>        <div class="card">
+            <div class="card-header">
+                <div class="card-title-row">
+                    <h3 class="card-title">鸟巢/水立方</h3>
+                    <span class="card-en">Bird's Nest & Water Cube</span>
+                </div>
+                <span class="category-tag" style="background:#3182ce">现代建筑</span>
+            </div>
+            <div class="card-body">
+                <div class="card-info">
+                    <div class="info-row">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-num">4.3</span>
+                        <span class="reviews">（10万+条评价）</span>
+                    </div>
+                    <p class="description">2008年北京奥运会主体育场和游泳馆，世界级建筑奇观。鸟巢的钢结构设计和水立方的膜结构令人叹为观止，夜景尤为壮观。</p>
+                    <div class="meta-grid">
+                        <div class="meta-item"><span class="meta-icon">📍</span><span>朝阳区</span></div>
+                        <div class="meta-item"><span class="meta-icon">🚇</span><span>8号线奥体中心站</span></div>
+                        <div class="meta-item"><span class="meta-icon">💰</span><span>¥50（鸟巢50元/水立方30元）</span></div>
+                        <div class="meta-item"><span class="meta-icon">⏱️</span><span>1-2小时</span></div>
+                        <div class="meta-item"><span class="meta-icon">👥</span><span>拥挤度: 中</span></div>
+                        <div class="meta-item"><span class="meta-icon">📅</span><span>最佳: 4月, 5月, 9月</span></div>
+                    </div>
+                    <div class="highlights"><span class="hl-label">✨ 亮点:</span> 鸟巢空中走廊, 水立方嬉水乐园, 奥林匹克公园, 奥运塔</div>
+                    <div class="tips"><span class="tip-icon">💡</span> 建议傍晚前往，白天参观内部，晚上看灯光秀</div>
+                </div>
+                <div class="card-chart">
+                    <div class="chart-title">月度访客趋势 (K)</div>
+                    <div class="bar-chart"><div class="bar-wrapper"><div class="bar" style="height:53%;background:#a0aec0" title="1月: 80K"></div><span class="bar-label">1月</span></div><div class="bar-wrapper"><div class="bar" style="height:46%;background:#a0aec0" title="2月: 70K"></div><span class="bar-label">2月</span></div><div class="bar-wrapper"><div class="bar" style="height:66%;background:#4299e1" title="3月: 100K"></div><span class="bar-label">3月</span></div><div class="bar-wrapper"><div class="bar" style="height:73%;background:#4299e1" title="4月: 110K"></div><span class="bar-label">4月</span></div><div class="bar-wrapper"><div class="bar" style="height:80%;background:#4299e1" title="5月: 120K"></div><span class="bar-label">5月</span></div><div class="bar-wrapper"><div class="bar" style="height:86%;background:#4299e1" title="6月: 130K"></div><span class="bar-label">6月</span></div><div class="bar-wrapper"><div class="bar" style="height:93%;background:#4299e1" title="7月: 140K"></div><span class="bar-label">7月</span></div><div class="bar-wrapper"><div class="bar" style="height:100%;background:#48bb78" title="8月: 150K"></div><span class="bar-label">8月</span></div><div class="bar-wrapper"><div class="bar" style="height:73%;background:#4299e1" title="9月: 110K"></div><span class="bar-label">9月</span></div><div class="bar-wrapper"><div class="bar" style="height:66%;background:#4299e1" title="10月: 100K"></div><span class="bar-label">10月</span></div><div class="bar-wrapper"><div class="bar" style="height:53%;background:#a0aec0" title="11月: 80K"></div><span class="bar-label">11月</span></div><div class="bar-wrapper"><div class="bar" style="height:53%;background:#a0aec0" title="12月: 80K"></div><span class="bar-label">12月</span></div></div>
+                </div>
+            </div>
+        </div></div>
+        <footer>
+            <p>📊 数据来源：综合各大旅游平台公开数据整理分析 | 仅供参考</p>
+            <p style="margin-top:4px;">北京市 · 文化旅游资源分析</p>
+        </footer>
+    </div>
+</body>
+</html>

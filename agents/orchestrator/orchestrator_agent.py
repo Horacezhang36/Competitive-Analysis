@@ -198,10 +198,7 @@ class OrchestratorAgent:
             )
 
             if result.returncode == 0:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {"status": "completed", "output": result.stdout}
+                return self._parse_agent_result(result.stdout, default_status="completed")
             else:
                 return {
                     "status": "failed",
@@ -234,18 +231,15 @@ class OrchestratorAgent:
             )
 
             if result.returncode == 0:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {"status": "completed", "output": result.stdout}
+                return self._parse_agent_result(result.stdout, default_status="completed")
             else:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {
-                        "status": "failed",
-                        "error": result.stderr
-                    }
+                parsed = self._parse_agent_result(result.stdout, default_status="failed")
+                if parsed.get("status") != "failed" or parsed.get("error"):
+                    return parsed
+                return {
+                    "status": "failed",
+                    "error": result.stderr
+                }
 
         except subprocess.TimeoutExpired:
             return {
@@ -273,18 +267,15 @@ class OrchestratorAgent:
             )
 
             if result.returncode == 0:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {"status": "completed", "output": result.stdout}
+                return self._parse_agent_result(result.stdout, default_status="completed")
             else:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {
-                        "status": "failed",
-                        "error": result.stderr
-                    }
+                parsed = self._parse_agent_result(result.stdout, default_status="failed")
+                if parsed.get("status") != "failed" or parsed.get("error"):
+                    return parsed
+                return {
+                    "status": "failed",
+                    "error": result.stderr
+                }
 
         except subprocess.TimeoutExpired:
             return {
@@ -303,6 +294,25 @@ class OrchestratorAgent:
 
         with open(self.state_file, "w", encoding="utf-8") as f:
             json.dump(self._state_to_dict(state), f, ensure_ascii=False, indent=2)
+
+    def _parse_agent_result(self, stdout: str, default_status: str) -> Dict:
+        """Extract the final JSON object from an agent process that also prints logs."""
+        text = stdout.strip()
+        if not text:
+            return {"status": default_status}
+
+        decoder = json.JSONDecoder()
+        for index in range(len(text) - 1, -1, -1):
+            if text[index] != "{":
+                continue
+            try:
+                parsed, end = decoder.raw_decode(text[index:])
+            except json.JSONDecodeError:
+                continue
+            if text[index + end:].strip() == "" and isinstance(parsed, dict):
+                return parsed
+
+        return {"status": default_status, "output": stdout}
 
     def _state_to_dict(self, state: WorkflowState) -> Dict:
         """将状态对象转换为字典"""

@@ -306,7 +306,7 @@ Agents: Generator + Verifier + Publisher + Orchestrator
         try:
             # 尝试推送
             result = subprocess.run(
-                ["git", "push", "-u", "origin", "main", "--force"],
+                ["git", "push", "-u", "origin", "main"],
                 cwd=PROJECT_ROOT,
                 capture_output=True,
                 text=True,
@@ -320,7 +320,7 @@ Agents: Generator + Verifier + Publisher + Orchestrator
                     "message": "Successfully pushed to GitHub"
                 }
             else:
-                error_msg = result.stderr.decode('utf-8', errors='replace')
+                error_msg = result.stderr
 
                 # 检查是否需要认证
                 if "Authentication failed" in error_msg or "permission denied" in error_msg.lower():

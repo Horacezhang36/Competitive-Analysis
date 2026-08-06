@@ -1,0 +1,57 @@
+name: AgentKit Runtime Continuous Delivery
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_name:
+        description: Runtime name to create for this run
+        required: false
+        default: agentkit-runtime-cd
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Runtime artifact
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agentkit-runtime-cd
+    env:
+      VOLCENGINE_ACCESS_KEY: ${{ secrets.VOLCENGINE_ACCESS_KEY }}
+      VOLCENGINE_SECRET_KEY: ${{ secrets.VOLCENGINE_SECRET_KEY }}
+      VOLCENGINE_REGION: ${{ secrets.VOLCENGINE_REGION || 'cn-beijing' }}
+      VOLCENGINE_AGENTKIT_REGION: ${{ secrets.VOLCENGINE_REGION || 'cn-beijing' }}
+      AGENTKIT_RUNTIME_ROLE_NAME: ${{ secrets.AGENTKIT_RUNTIME_ROLE_NAME }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install AgentKit CLI
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install agentkit-sdk-python==0.8.1
+
+      - name: Show AgentKit CLI version
+        run: agentkit --version
+
+      - name: Validate required secrets
+        run: |
+          test -n "$VOLCENGINE_ACCESS_KEY"
+          test -n "$VOLCENGINE_SECRET_KEY"
+          test -n "$AGENTKIT_RUNTIME_ROLE_NAME"
+
+      - name: Build image
+        run: agentkit build --config-file agentkit.yaml
+
+      - name: Explain release boundary
+        run: |
+          echo "Image build completed."
+          echo "Create/update/release/rollback are intentionally documented as explicit CD steps."
+          echo "See docs/agentkit-runtime-continuous-delivery.md."

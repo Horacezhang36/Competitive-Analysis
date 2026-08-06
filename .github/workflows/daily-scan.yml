@@ -37,6 +37,8 @@ jobs:
           if [ -f logs/latest_detection.md ]; then
             echo "detection_report=$(cat logs/latest_detection.md)" >> $GITHUB_OUTPUT
             echo "new_products=$(grep -c '## 检测到' logs/latest_detection.md)" >> $GITHUB_OUTPUT
+          else
+            echo "new_products=0" >> $GITHUB_OUTPUT
           fi
 
       - name: Show detection result
@@ -55,11 +57,12 @@ jobs:
 
           # Run Verifier
           cd ../verifier
-          python verifier_agent.py --report ../reports/competitive_analysis_report.html
+          python verifier_agent.py --report ../../reports/competitive_analysis_report.html
 
           # Create output directory
+          cd "$GITHUB_WORKSPACE"
           mkdir -p output/latest
-          cp ../reports/*.html output/latest/ 2>/dev/null || true
+          cp reports/*.html output/latest/ 2>/dev/null || true
 
       - name: Commit and push changes
         if: steps.check_new.outputs.new_products != '0'
@@ -68,5 +71,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add .
-          git commit -m "ci: Daily scan $(date +%Y-%m-%d) - New products detected"
+          git commit -m "ci: Daily scan $(date +%Y-%m-%d) - New products detected" || exit 0
           git push

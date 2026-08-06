@@ -1,0 +1,35 @@
+common:
+  agent_name: agentkit-runtime-cd
+  entry_point: app.py
+  description: AgentKit Runtime continuous delivery demo.
+  language: Python
+  language_version: '3.12'
+  runtime_envs:
+    DEMO_VERSION: v1
+    DEMO_RELEASE_MARKER: COURSE_CD_V1
+  launch_type: cloud
+launch_types:
+  cloud:
+    region: cn-beijing
+    tos_bucket: agentkit-platform-{{account_id}}
+    tos_prefix: agentkit-builds
+    image_tag: '{{timestamp}}'
+    cr_instance_name: agentkit-platform-{{account_id}}
+    cr_namespace_name: agentkit
+    cr_repo_name: agentkit-runtime-cd
+    cr_auto_create_instance_type: Micro
+    cr_image_full_url: Auto
+    build_timeout: 3600
+    cp_workspace_name: agentkit-cli-workspace
+    cp_pipeline_name: agentkit-runtime-cd
+    cp_pipeline_id: Auto
+    project_name: default
+    runtime_id: Auto
+    runtime_name: agentkit-runtime-cd
+    runtime_role_name: Auto
+    runtime_auth_type: key_auth
+    runtime_apikey_name: Auto
+    runtime_apikey: Auto
+    runtime_jwt_allowed_clients: []
+docker_build:
+  platform: auto

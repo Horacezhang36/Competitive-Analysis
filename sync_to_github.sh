@@ -12,7 +12,7 @@ echo "📝 提交信息: $COMMIT_MSG"
 echo ""
 
 # 检查是否有变更
-if git diff --quiet git diff --quiet && git diff --cached --quietgit diff --quiet && git diff --cached --quiet git diff --cached --quiet git diff --quiet && git diff --cached --quietgit diff --quiet && git diff --cached --quiet [ -z "$(git ls-files --others --exclude-standard)" ]; then
+if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
     echo "⚠️  没有检测到变更，跳过提交。"
     exit 0
 fi
@@ -24,7 +24,8 @@ git add -A
 git commit -m "$COMMIT_MSG"
 
 # 推送
-git push origin main
+CURRENT_BRANCH="$(git branch --show-current)"
+git push origin "${CURRENT_BRANCH:-main}"
 
 echo ""
 echo "✅ 同步完成！"

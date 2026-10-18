@@ -1,2 +1,2 @@
 ## 最新报告
-- [竞品分析报告 (2026-10-17)](output/latest/competitive_analysis_report.html)
+- [竞品分析报告 (2026-10-18)](output/latest/competitive_analysis_report.html)
